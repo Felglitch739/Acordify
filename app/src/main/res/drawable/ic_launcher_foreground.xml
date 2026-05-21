@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Outer concentric disc rings of the vinyl record -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M54,18 C34.12,18 18,34.12 18,54 C18,73.88 34.12,90 54,90 C73.88,90 90,73.88 90,54 C90,34.12 73.88,18 54,18 Z M54,84 C37.43,84 24,70.57 24,54 C24,37.43 37.43,24 54,24 C70.57,24 84,37.43 84,54 C84,70.57 70.57,84 54,84 Z" />
+    
+    <path
+        android:fillColor="#334155"
+        android:pathData="M54,34 C42.95,34 34,42.95 34,54 C34,65.05 42.95,74 54,74 C65.05,74 74,65.05 74,54 C74,42.95 65.05,34 54,34 Z M54,68 C46.27,68 40,61.73 40,54 C40,46.27 46.27,40 54,40 C61.73,40 68,46.27 68,54 C68,61.73 61.73,68 54,68 Z" />
+
+    <!-- Central core spindle hole and label surface -->
+    <path
+        android:fillColor="#818CF8"
+        android:pathData="M54,48 C50.69,48 48,50.69 48,54 C48,57.31 50.69,60 54,60 C57.31,60 60,57.31 60,54 C60,50.69 57.31,48 54,48 Z M54,56 C52.9,56 52,55.1 52,54 C52,52.9 52.9,52 54,52 C55.1,52 56,52.9 56,54 C56,55.1 55.1,56 54,56 Z" />
+
+    <!-- Glowing music note overlay -->
+    <path
+        android:fillColor="#F43F5E"
+        android:pathData="M66,38 L50,42 L50,58 C48.5,57.2 46.4,57.2 44.5,58.2 C42.2,59.4 41.2,61.9 42.2,63.8 C43.2,65.7 45.8,66.3 48.1,65.1 C50,64.1 51,62.2 51,60.5 L51,47 L64,43.5 L64,52 C62.5,51.2 60.4,51.2 58.5,52.2 C56.2,53.4 55.2,55.9 56.2,57.8 C57.2,59.7 59.8,60.3 62.1,59.1 C64,58.1 65,56.2 65,54.5 L65,39 C65,38.4 65.5,38 66,38 Z" />
+</vector>
