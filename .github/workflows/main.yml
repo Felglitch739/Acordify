@@ -17,21 +17,22 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        # Quitamos la línea de cache: gradle aquí para evitar el error 400 de GitHub
 
     - name: Inyectar API Key de Gemini
       run: echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> local.properties
 
-    # Instalamos Gradle directamente en el servidor de GitHub
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
+      with:
+        cache-disabled: true # Apagamos el caché problemático por completo
 
-    # Usamos el comando global "gradle" en lugar del archivo local "./gradlew"
     - name: Compilar el APK
-      run: gradle assembleDebug
+      # El --no-daemon evita que el KSP se crashee en la nube
+      run: gradle assembleDebug --no-daemon 
 
-    # Usamos comodines (**/*.apk) para que GitHub busque el APK en cualquier carpeta
     - name: Subir el APK para descargar
       uses: actions/upload-artifact@v4
       with:
-        name: Mi-App-Android
+        name: Acordify-APK
         path: '**/*.apk'
