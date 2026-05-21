@@ -1,0 +1,36 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v3
+
+    - name: Configurar Java JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    # ESTE PASO INYECTA TU API KEY EN EL ARCHIVO LOCAL.PROPERTIES
+    - name: Inyectar API Key de Gemini
+      run: echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> local.properties
+
+    - name: Dar permisos al Gradle
+      run: chmod +x gradlew
+
+    - name: Compilar el APK
+      run: ./gradlew assembleDebug
+
+    - name: Subir el APK para descargar
+      uses: actions/upload-artifact@v3
+      with:
+        name: Mi-App-Android
+        path: app/build/outputs/apk/debug/app-debug.apk
