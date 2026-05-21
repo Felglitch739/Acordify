@@ -17,19 +17,21 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Inyectar API Key de Gemini
-      run: echo "gemini.api.key=${{ secrets.YOUR_GEMINI_API_KEY }}" >> local.properties
+      run: echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> local.properties
 
-    - name: Dar permisos al Gradle
-      run: chmod +x gradlew
+    # Instalamos Gradle directamente en el servidor de GitHub
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
 
+    # Usamos el comando global "gradle" en lugar del archivo local "./gradlew"
     - name: Compilar el APK
-      run: ./gradlew assembleDebug
+      run: gradle assembleDebug
 
+    # Usamos comodines (**/*.apk) para que GitHub busque el APK en cualquier carpeta
     - name: Subir el APK para descargar
       uses: actions/upload-artifact@v4
       with:
         name: Mi-App-Android
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: '**/*.apk'
