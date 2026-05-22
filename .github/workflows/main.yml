@@ -19,12 +19,14 @@ jobs:
         distribution: 'temurin'
 
     - name: Inyectar API Key de Gemini
-      run: echo "gemini.api.key=${{ secrets.GEMINI_API_KEY }}" >> local.properties
+      run: echo "gemini.api.key=${{ secrets.YOUR_GEMINI_API_KEY }}" >> local.properties
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
         cache-disabled: true
+    - name: Generar Debug Keystore
+      run: keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
 
     - name: Compilar el APK
       # Agregamos --no-configuration-cache para matar el bug de raíz
