@@ -1,1 +1,6 @@
-{"name":"ChordWeaver","description":"Everforest inspired app that generates chord progressions and lyrics based on musical genres.","requestFramePermissions":[],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}
+{
+  "name": "Acordify",
+  "description": "Moody Musician inspired app that generates chord progressions and lyrics based on musical genres.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

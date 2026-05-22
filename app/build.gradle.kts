@@ -3,7 +3,6 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
-  alias(libs.plugins.secrets)
 }
 
 android {
@@ -18,6 +17,14 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    val localProperties = java.util.Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { localProperties.load(it) }
+    }
+    val geminiApiKey = System.getenv("GEMINI_API_KEY") ?: localProperties.getProperty("gemini.api.key") ?: ""
+    buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
   }
 
   signingConfigs {
@@ -58,12 +65,7 @@ android {
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
-// to match the convention used in Web projects.
-secrets {
-  propertiesFileName = ".env"
-  defaultPropertiesFileName = ".env.example"
-}
+// Secrets plugin removed; using manual local.properties reading instead.
 
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
@@ -93,7 +95,6 @@ dependencies {
   // implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   // implementation(libs.firebase.ai)
-  implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.logging.interceptor)
