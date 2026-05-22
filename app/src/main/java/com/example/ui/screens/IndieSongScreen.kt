@@ -466,7 +466,7 @@ fun IndieSongScreen(
                 modifier = Modifier.padding(8.dp),
                 containerColor = Color(0xFF121212),
                 contentColor = Color.White,
-                actionColor = accentGreen,
+                actionContentColor = accentGreen,
                 shape = RoundedCornerShape(8.dp),
                 action = {
                     Text(
