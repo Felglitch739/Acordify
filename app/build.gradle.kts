@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
@@ -18,11 +21,17 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    val localProperties = java.util.Properties()
+    val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
-        localPropertiesFile.inputStream().use { localProperties.load(it) }
+        val stream = FileInputStream(localPropertiesFile)
+        try {
+            localProperties.load(stream)
+        } finally {
+            stream.close()
+        }
     }
+
     val geminiApiKey = System.getenv("GEMINI_API_KEY") ?: localProperties.getProperty("gemini.api.key") ?: ""
     buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
   }
