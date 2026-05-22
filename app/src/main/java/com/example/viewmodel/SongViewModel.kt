@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import com.example.BuildConfig
 
 sealed interface UiState {
     object Idle : UiState
@@ -21,7 +22,7 @@ sealed interface UiState {
     data class Error(val message: String) : UiState
 }
 
-import com.example.BuildConfig
+
 
 val API_KEY = BuildConfig.GEMINI_API_KEY
 
