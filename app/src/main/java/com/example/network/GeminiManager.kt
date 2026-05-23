@@ -4,61 +4,33 @@ import android.util.Log
 import com.example.BuildConfig
 import com.example.model.Song
 import com.example.model.SongStyle
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.POST
-import retrofit2.http.Query
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-@JsonClass(generateAdapter = true)
-data class Part(
-    @Json(name = "text") val text: String
+data class ChatMessage(
+    val role: String,
+    val content: String
 )
 
-@JsonClass(generateAdapter = true)
-data class Content(
-    @Json(name = "parts") val parts: List<Part>
+data class ChatCompletionRequest(
+    val model: String,
+    val messages: List<ChatMessage>
 )
 
-@JsonClass(generateAdapter = true)
-data class GenerationConfig(
-    @Json(name = "responseMimeType") val responseMimeType: String = "application/json",
-    @Json(name = "temperature") val temperature: Double = 1.0
+data class ChatCompletionResponse(
+    val choices: List<Choice>?
 )
 
-@JsonClass(generateAdapter = true)
-data class GenerateContentRequest(
-    @Json(name = "contents") val contents: List<Content>,
-    @Json(name = "generationConfig") val generationConfig: GenerationConfig? = GenerationConfig()
+data class Choice(
+    val message: ChatMessage?
 )
 
-@JsonClass(generateAdapter = true)
-data class Candidate(
-    @Json(name = "content") val content: Content
-)
-
-@JsonClass(generateAdapter = true)
-data class GenerateContentResponse(
-    @Json(name = "candidates") val candidates: List<Candidate>?
-)
-
-interface GeminiApiService {
-    @POST("v1beta/models/gemini-1.5-flash:generateContent")
-    suspend fun generateContent(
-        @Query("key") apiKey: String,
-        @Body request: GenerateContentRequest
-    ): GenerateContentResponse
-}
-
-@JsonClass(generateAdapter = true)
 data class SongResponseJson(
     val title: String,
     val tempo: String,
@@ -68,12 +40,9 @@ data class SongResponseJson(
     val soloTip: String
 )
 
-object GeminiClient {
-    private const val BASE_URL = "https://generativelanguage.googleapis.com/"
-
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
+object GeminiManager {
+    private const val TAG = "OpenAIManager"
+    private val gson = Gson()
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -81,26 +50,11 @@ object GeminiClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    val service: GeminiApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(GeminiApiService::class.java)
-    }
-
-    val songAdapter = moshi.adapter(SongResponseJson::class.java)
-}
-
-object GeminiManager {
-    private const val TAG = "GeminiManager"
-
     fun hasValidApiKey(): Boolean {
         return try {
-            val key = BuildConfig.GEMINI_API_KEY.trim()
+            val key = BuildConfig.OPENAI_API_KEY.trim()
             key.isNotEmpty() && 
-            key != "MY_GEMINI_API_KEY" && 
+            key != "MY_OPENAI_API_KEY" && 
             !key.contains("PLACEHOLDER") &&
             key.length >= 10
         } catch (e: Exception) {
@@ -110,7 +64,7 @@ object GeminiManager {
 
     suspend fun generateIndieSong(style: SongStyle): Song? = withContext(Dispatchers.IO) {
         if (!hasValidApiKey()) {
-            Log.d(TAG, "No valid API Gen key found. Falling back to local dataset.")
+            Log.d(TAG, "No valid API Key found. Falling back to local dataset.")
             return@withContext null
         }
 
@@ -166,32 +120,57 @@ object GeminiManager {
             Do not wrap the response in backticks or markdown formatting. Output only the raw valid JSON.
         """.trimIndent()
 
-        val request = GenerateContentRequest(
-            contents = listOf(
-                Content(parts = listOf(Part(text = prompt)))
-            ),
-            generationConfig = GenerationConfig()
+        val requestBodyData = ChatCompletionRequest(
+            model = "gpt-4o-mini",
+            messages = listOf(
+                ChatMessage(role = "system", content = "You are a helpful assistant that writes songs in JSON format."),
+                ChatMessage(role = "user", content = prompt)
+            )
         )
 
+        val jsonBody = gson.toJson(requestBodyData)
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = jsonBody.toRequestBody(mediaType)
+        
+        var baseUrl = BuildConfig.OPENAI_BASE_URL.trim()
+        if (baseUrl.isEmpty()) baseUrl = "https://api.openai.com/"
+        if (!baseUrl.endsWith("/")) baseUrl += "/"
+
+        val request = Request.Builder()
+            .url("${baseUrl}v1/chat/completions")
+            .post(body)
+            .addHeader("Authorization", "Bearer ${BuildConfig.OPENAI_API_KEY.trim()}")
+            .addHeader("Content-Type", "application/json")
+            .build()
+
         try {
-            val response = GeminiClient.service.generateContent(BuildConfig.GEMINI_API_KEY, request)
-            val rawText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-            if (rawText != null) {
-                val cleanJson = cleanJsonString(rawText)
-                val parsed = GeminiClient.songAdapter.fromJson(cleanJson)
-                if (parsed != null) {
-                    return@withContext Song(
-                        title = parsed.title.trim(),
-                        tempo = parsed.tempo.trim(),
-                        chords = parsed.chords.trim(),
-                        lyrics = parsed.lyrics.trim(),
-                        soloScale = parsed.soloScale.trim(),
-                        soloTip = parsed.soloTip.trim(),
-                        isAiGenerated = true
-                    )
+            okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    Log.e(TAG, "Unsuccessful response: ${response.code}")
+                    return@withContext null
                 }
+                
+                val responseBodyStr = response.body?.string() ?: return@withContext null
+                val completionResponse = gson.fromJson(responseBodyStr, ChatCompletionResponse::class.java)
+                val rawText = completionResponse.choices?.firstOrNull()?.message?.content
+                
+                if (rawText != null) {
+                    val cleanJson = cleanJsonString(rawText)
+                    val parsed = gson.fromJson(cleanJson, SongResponseJson::class.java)
+                    if (parsed != null) {
+                        return@withContext Song(
+                            title = parsed.title.trim(),
+                            tempo = parsed.tempo.trim(),
+                            chords = parsed.chords.trim(),
+                            lyrics = parsed.lyrics.trim(),
+                            soloScale = parsed.soloScale.trim(),
+                            soloTip = parsed.soloTip.trim(),
+                            isAiGenerated = true
+                        )
+                    }
+                }
+                null
             }
-            null
         } catch (e: Exception) {
             Log.e(TAG, "Error generating indie song", e)
             null

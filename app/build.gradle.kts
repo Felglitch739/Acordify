@@ -32,8 +32,10 @@ android {
         }
     }
 
-    val geminiApiKey = System.getenv("GEMINI_API_KEY") ?: localProperties.getProperty("gemini.api.key") ?: ""
-    buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+    val openAiApiKey = System.getenv("OPENAI_API_KEY") ?: localProperties.getProperty("openai.api.key") ?: ""
+    val openAiBaseUrl = System.getenv("OPENAI_BASE_URL") ?: localProperties.getProperty("openai.base.url") ?: ""
+    buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
+    buildConfigField("String", "OPENAI_BASE_URL", "\"$openAiBaseUrl\"")
   }
 
   signingConfigs {
@@ -104,6 +106,7 @@ dependencies {
   // implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   // implementation(libs.firebase.ai)
+  implementation(libs.gson)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.logging.interceptor)

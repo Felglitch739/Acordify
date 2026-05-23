@@ -18,8 +18,10 @@ jobs:
         java-version: '21' # ¡Aquí está el cambio a Java 21!
         distribution: 'temurin'
 
-    - name: Inyectar API Key de Gemini
-      run: echo "gemini.api.key=${{ secrets.YOUR_GEMINI_API_KEY }}" >> local.properties
+    - name: Inyectar variables de OpenAI
+      run: |
+        echo "openai.api.key=${{ secrets.YOUR_GEMINI_API_KEY }}" >> local.properties
+        echo "openai.base.url=https://rgvaiclass.com/v1" >> local.properties
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
